@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giro ABC – Lista do Pedal</title>
+<meta name="description" content="Mais que pedalar, é compartilhar caminhos! Coloque seu nome na lista do próximo pedal do Giro ABC.">
+<meta name="theme-color" content="#0b0b0b">
+<!-- Prévia do link no WhatsApp: troque SEU-SITE pelo endereço final (ex.: https://diegodepauladiego.github.io/giro-abc) -->
+<meta property="og:title" content="Giro ABC – Lista do Pedal">
+<meta property="og:description" content="Mais que pedalar, é compartilhar caminhos! Coloque seu nome na lista.">
+<meta property="og:image" content="https://diegodepauladiego.github.io/giro-abc/capa.jpg">
+<meta property="og:type" content="website">
+<link rel="icon" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =================== CONFIGURAÇÃO =================== */
+const CONFIG = {
+  SUPABASE_URL: "https://qmsycehcwxttgekjsayu.supabase.co",        // ex.: "https://abcdefgh.supabase.co"   (Supabase > Project Settings > API)
+  SUPABASE_ANON_KEY: "sb_publishable_S9oDws7xvm_qL--ewklJow_9fY67_6l",   // a chave "anon public" (pode ficar no site, é pública)
+  CLUBE_NOME: "Giro ABC",
+  SLOGAN: "Mais que pedalar, é compartilhar caminhos!",
+  LOGO: "logo.png",
+  CAPA: "capa.jpg",
+  INSTAGRAM: ""            // opcional, ex.: "https://instagram.com/giroabc"
+};
+/* Se SUPABASE_URL estiver vazio, a página roda em MODO DEMO (dados de exemplo, senha do organizador: demo) */
+</script>
+<style>
+  :root{
+    --bg:#0b0b0b; --card:#151515; --card2:#1d1d1d; --linha:#2a2a2a;
+    --amarelo:#FFC72C; --amarelo2:#ffdb6e; --texto:#f4f4f4; --suave:#a3a3a3;
+    --vermelho:#ff5a4f; --verde:#3ddc84; --strava:#FC4C02; --wpp:#25D366;
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--texto);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--amarelo)}
+  button{font:inherit;cursor:pointer}
+  .wrap{max-width:640px;margin:0 auto;padding:0 14px 40px}
+  header.topo{position:sticky;top:0;z-index:5;background:rgba(11,11,11,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--linha)}
+  header.topo .in{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:8px 14px}
+  header.topo img{width:38px;height:38px;border-radius:50%}
+  header.topo .nome{font-family:Anton,Impact,sans-serif;font-size:22px;letter-spacing:.5px;color:var(--amarelo);text-transform:uppercase}
+  header.topo .demo{margin-left:auto;font-size:11px;font-weight:700;background:var(--amarelo);color:#000;border-radius:99px;padding:3px 9px}
+
+  .capa{margin:14px 0 0;border-radius:var(--r);overflow:hidden;border:1px solid var(--linha);aspect-ratio:3/2;background:#111}
+  .capa img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .card{background:var(--card);border:1px solid var(--linha);border-radius:var(--r);padding:18px;margin-top:14px}
+  .convida{font-weight:800;font-size:13px;letter-spacing:1.5px;color:var(--amarelo);text-transform:uppercase}
+  h1.titulo{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:clamp(30px,8vw,44px);line-height:1.02;margin:6px 0 4px;text-transform:uppercase}
+  .status{display:inline-block;font-size:12px;font-weight:700;border-radius:99px;padding:3px 10px;margin-top:6px}
+  .status.aberto{background:rgba(61,220,132,.14);color:var(--verde)}
+  .status.fechado{background:rgba(255,90,79,.14);color:var(--vermelho)}
+
+  .grade{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+  .info{background:var(--card2);border-radius:12px;padding:12px}
+  .info .rot{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--suave);text-transform:uppercase}
+  .info .val{font-size:19px;font-weight:800;margin-top:3px}
+  .info .val small{font-size:13px;font-weight:600;color:var(--suave)}
+  .info.larga{grid-column:1/-1}
+  .info .val a{color:var(--texto);text-decoration:none;border-bottom:1px dashed var(--amarelo)}
+
+  .aviso{margin-top:12px;background:rgba(255,199,44,.1);border:1px solid rgba(255,199,44,.45);color:var(--amarelo2);border-radius:12px;padding:12px 14px;font-weight:800;text-transform:uppercase;font-size:14px}
+  .obs{margin-top:12px;color:#d6d6d6;font-size:15px;line-height:1.5;white-space:pre-wrap}
+
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:12px;padding:14px 16px;font-weight:800;font-size:16px;text-decoration:none;transition:transform .06s ease,filter .15s}
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.amarelo{background:var(--amarelo);color:#000}
+  .btn.strava{background:var(--strava);color:#fff;margin-top:12px}
+  .btn.wpp{background:var(--wpp);color:#04220f}
+  .btn.fantasma{background:transparent;color:var(--texto);border:1px solid var(--linha)}
+  .btn.perigo{background:transparent;color:var(--vermelho);border:1px solid rgba(255,90,79,.5)}
+  .lado{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+
+  h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:24px;letter-spacing:.3px;margin:0 0 12px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+  h2 .cont{font-family:Inter,sans-serif;font-size:13px;font-weight:800;background:var(--amarelo);color:#000;border-radius:99px;padding:3px 10px}
+
+  .entrar{display:flex;gap:8px}
+  input,textarea,select{width:100%;background:#0f0f0f;border:1px solid #333;color:var(--texto);border-radius:12px;padding:13px 14px;font:inherit;font-size:16px;outline:none}
+  input:focus,textarea:focus,select:focus{border-color:var(--amarelo)}
+  .entrar .btn{width:auto;white-space:nowrap}
+  .msg{margin-top:10px;font-size:14px;min-height:1px}
+  .msg.erro{color:var(--vermelho)} .msg.ok{color:var(--verde)}
+  .voce{background:rgba(61,220,132,.1);border:1px solid rgba(61,220,132,.35);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .voce b{color:var(--verde)}
+  .link-sair{background:none;border:0;color:var(--suave);text-decoration:underline;font-size:14px;padding:4px}
+
+  ol.lista{list-style:none;margin:0;padding:0;counter-reset:n}
+  ol.lista li{counter-increment:n;display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--linha);font-size:16px;font-weight:600}
+  ol.lista li:last-child{border-bottom:0}
+  ol.lista li::before{content:counter(n);min-width:30px;height:30px;border-radius:50%;background:var(--card2);color:var(--amarelo);display:grid;place-items:center;font-weight:800;font-size:13px}
+  ol.lista li.eu{color:var(--verde)}
+  ol.lista li.eu::before{background:rgba(61,220,132,.18);color:var(--verde)}
+  ol.lista li .tag{font-size:11px;font-weight:800;background:rgba(61,220,132,.18);color:var(--verde);border-radius:99px;padding:2px 8px}
+  ol.lista li .rm{margin-left:auto;background:none;border:1px solid rgba(255,90,79,.4);color:var(--vermelho);border-radius:8px;padding:4px 9px;font-size:13px}
+  .vazio{color:var(--suave);text-align:center;padding:16px 0}
+  .vagas{height:6px;background:var(--card2);border-radius:99px;overflow:hidden;margin:-4px 0 14px}
+  .vagas i{display:block;height:100%;background:var(--amarelo);border-radius:99px;transition:width .3s}
+
+  footer{text-align:center;color:var(--suave);font-size:13px;margin-top:28px;line-height:1.8}
+  footer .slogan{font-family:Anton,Impact,sans-serif;color:var(--amarelo);font-size:18px;letter-spacing:.3px}
+  footer button{background:none;border:0;color:var(--suave);text-decoration:underline;font-size:13px}
+
+  /* Organizador */
+  .adm{border-color:rgba(255,199,44,.5)}
+  .adm h2{color:var(--amarelo)}
+  .campo{margin-top:12px}
+  .campo label{display:block;font-size:12px;font-weight:700;letter-spacing:.6px;color:var(--suave);text-transform:uppercase;margin-bottom:6px}
+  .campo .dica{font-size:12px;color:#777;margin-top:4px}
+  .duas{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tres{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .chk{display:flex;align-items:center;gap:10px;margin-top:14px;font-weight:600}
+  .chk input{width:22px;height:22px;accent-color:var(--amarelo)}
+  .sep{height:1px;background:var(--linha);margin:18px 0}
+  .linha-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .linha-btns .btn{width:auto;flex:1 1 140px;font-size:14px;padding:11px 12px}
+
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);background:#fff;color:#000;font-weight:700;padding:12px 18px;border-radius:12px;opacity:0;transition:.25s;z-index:50;max-width:90vw;text-align:center;pointer-events:none}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
+  .modal.on{display:flex}
+  .modal .caixa{background:var(--card);border:1px solid var(--linha);border-radius:var(--r);padding:20px;width:100%;max-width:380px}
+  .modal h3{margin:0 0 6px;font-family:Anton,Impact,sans-serif;font-weight:400;font-size:22px;text-transform:uppercase}
+  .modal p{margin:0 0 14px;color:var(--suave);font-size:14px}
+
+  .carregando{text-align:center;color:var(--suave);padding:40px 0}
+  .esconde{display:none!important}
+  @media (max-width:380px){ .grade{grid-template-columns:1fr} .tres{grid-template-columns:1fr 1fr} }
+</style>
+</head>
+<body>
+
+<header class="topo"><div class="in">
+  <img id="logoTopo" alt="" src="logo.png">
+  <span class="nome" id="nomeClube">Giro ABC</span>
+  <span class="demo esconde" id="tagDemo">MODO DEMO</span>
+</div></header>
+
+<main class="wrap">
+  <div class="capa" id="capa"><img id="imgCapa" alt="Capa do clube" src="capa.jpg"></div>
+
+  <div id="carregando" class="carregando">Carregando o pedal…</div>
+  <div id="semPedal" class="card esconde" style="text-align:center">
+    <h2 style="justify-content:center">Nenhum pedal marcado</h2>
+    <p style="color:var(--suave);margin:0">Assim que o próximo for anunciado, ele aparece aqui. 🚴</p>
+  </div>
+
+  <!-- Evento -->
+  <section id="evento" class="card esconde">
+    <div class="convida">🚵🏻‍♂️ <span id="convidaTxt"></span> convida você! 🫵</div>
+    <h1 class="titulo" id="evTitulo"></h1>
+    <span class="status" id="evStatus"></span>
+    <div class="grade">
+      <div class="info"><div class="rot">🗓️ Data</div><div class="val" id="evData"></div></div>
+      <div class="info"><div class="rot">⏰ Saída</div><div class="val" id="evHora"></div></div>
+      <div class="info" id="boxDist"><div class="rot">🚴 Distância</div><div class="val" id="evDist"></div></div>
+      <div class="info" id="boxElev"><div class="rot">⛰️ Elevação</div><div class="val" id="evElev"></div></div>
+      <div class="info larga"><div class="rot">📍 Ponto de saída</div><div class="val" id="evLocal"></div></div>
+    </div>
+    <div class="aviso esconde" id="evAviso"></div>
+    <div class="obs esconde" id="evObs"></div>
+    <a class="btn strava esconde" id="evStrava" target="_blank" rel="noopener">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.4 17.9l-2.1-4.1h-3.1l5.2 10.2 5.1-10.2h-3.1zM10.2 0L3.3 13.8h4.1l2.8-5.5 2.8 5.5h4z"/></svg>
+      Ver rota no Strava
+    </a>
+  </section>
+
+  <!-- Inscrição -->
+  <section id="boxEntrar" class="card esconde">
+    <h2>✍️ Coloque seu nome</h2>
+    <div id="formEntrar">
+      <form class="entrar" id="fEntrar" autocomplete="on">
+        <input id="inNome" name="nome" maxlength="40" placeholder="Seu nome ou apelido" autocomplete="nickname" required>
+        <button class="btn amarelo" id="btEntrar" type="submit">Tô dentro! 🚴</button>
+      </form>
+    </div>
+    <div id="jaEstou" class="voce esconde">
+      <div>✅ Você está na lista como <b id="meuNome"></b></div>
+      <button class="link-sair" id="btSair">Sair</button>
+    </div>
+    <div id="fechadoMsg" class="msg erro esconde"></div>
+    <div class="msg" id="msgEntrar"></div>
+  </section>
+
+  <!-- Lista -->
+  <section id="boxLista" class="card esconde">
+    <h2>🚴 Lista de ciclistas <span class="cont" id="contador">0</span></h2>
+    <div class="vagas esconde" id="barraVagas"><i id="barraVagasI"></i></div>
+    <ol class="lista" id="lista"></ol>
+    <div class="lado">
+      <button class="btn wpp" id="btWpp">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.3-.6-.4zM12 21.8c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4C2.7 15.6 2.2 13.8 2.2 12 2.2 6.6 6.6 2.2 12 2.2S21.8 6.6 21.8 12 17.4 21.8 12 21.8zM12 0C5.4 0 0 5.4 0 12c0 2.1.6 4.2 1.6 6L0 24l6.2-1.6c1.8 1 3.8 1.5 5.8 1.5 6.6 0 12-5.4 12-12S18.6 0 12 0z"/></svg>
+        Mandar no grupo
+      </button>
+      <button class="btn fantasma" id="btCopiar">📋 Copiar mensagem</button>
+    </div>
+    <button class="btn fantasma" id="btLink" style="margin-top:10px">🔗 Copiar link da lista</button>
+  </section>
+
+  <!-- Organizador -->
+  <section id="boxAdm" class="card adm esconde">
+    <h2>⚙️ Área do organizador</h2>
+    <div class="campo">
+      <label for="selPedal">Pedal</label>
+      <select id="selPedal"></select>
+    </div>
+    <div class="linha-btns">
+      <button class="btn amarelo" id="btNovo">➕ Novo pedal</button>
+      <button class="btn fantasma" id="btDuplicar">📄 Duplicar este</button>
+    </div>
+    <div class="sep"></div>
+    <form id="fPedal">
+      <input type="hidden" id="pId">
+      <div class="campo"><label for="pTitulo">Título / rota *</label><input id="pTitulo" required placeholder="Paranapiacaba x Quarta Divisão"></div>
+      <div class="duas">
+        <div class="campo"><label for="pData">Data *</label><input id="pData" type="date" required></div>
+        <div class="campo"><label for="pHora">Saída *</label><input id="pHora" type="time" required></div>
+      </div>
+      <div class="campo"><label for="pLocal">Ponto de saída *</label><input id="pLocal" required placeholder="Azul de Fome - Avenida Portugal"></div>
+      <div class="campo"><label for="pMaps">Link do mapa (opcional)</label><input id="pMaps" type="url" placeholder="https://maps.app.goo.gl/..."><div class="dica">Se ficar vazio, a página cria um link do Google Maps com o nome do local.</div></div>
+      <div class="tres">
+        <div class="campo"><label for="pDist">Km</label><input id="pDist" type="number" step="0.1" min="0" inputmode="decimal" placeholder="75"></div>
+        <div class="campo"><label for="pElev">Elevação (m)</label><input id="pElev" type="number" min="0" inputmode="numeric" placeholder="1000"></div>
+        <div class="campo"><label for="pLimite">Vagas</label><input id="pLimite" type="number" min="1" inputmode="numeric" placeholder="sem limite"></div>
+      </div>
+      <div class="campo"><label for="pStrava">Link da rota no Strava</label><input id="pStrava" type="url" placeholder="https://www.strava.com/routes/..."></div>
+      <div class="campo"><label for="pAviso">Aviso em destaque</label><input id="pAviso" placeholder="Não indicado para iniciantes!"></div>
+      <div class="campo"><label for="pObs">Observações</label><textarea id="pObs" rows="3" placeholder="Levar câmara reserva, 2 caramanholas, parada pro café em…"></textarea></div>
+      <label class="chk"><input type="checkbox" id="pAtivo" checked> Inscrições abertas</label>
+      <button class="btn amarelo" type="submit" style="margin-top:16px" id="btSalvar">💾 Salvar pedal</button>
+    </form>
+    <div class="sep"></div>
+    <div class="campo" style="margin-top:0">
+      <label for="inAdmNome">Colocar alguém na lista</label>
+      <form class="entrar" id="fAdmAdd"><input id="inAdmNome" maxlength="40" placeholder="Nome"><button class="btn fantasma" type="submit">Adicionar</button></form>
+    </div>
+    <div class="linha-btns" style="margin-top:16px">
+      <button class="btn perigo" id="btExcluir">🗑️ Excluir pedal</button>
+      <button class="btn fantasma" id="btSairAdm">Sair do modo organizador</button>
+    </div>
+  </section>
+
+  <footer>
+    <div class="slogan" id="slogan"></div>
+    <div id="insta"></div>
+    <button id="btAbrirAdm">Área do organizador</button>
+  </footer>
+</main>
+
+<div class="modal" id="modal"><div class="caixa">
+  <h3 id="mTitulo"></h3><p id="mTexto"></p>
+  <input id="mInput" type="password" class="esconde" placeholder="Senha">
+  <div class="lado"><button class="btn fantasma" id="mNao">Cancelar</button><button class="btn amarelo" id="mSim">OK</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const DEMO = !CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY;
+
+/* ---------- utilidades ---------- */
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k){ try { localStorage.removeItem(k); } catch {} },
+  sget(k){ try { return sessionStorage.getItem(k); } catch { return null; } },
+  sset(k,v){ try { v==null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k,v); } catch {} }
+};
+const DIAS = ["DOMINGO","SEGUNDA-FEIRA","TERÇA-FEIRA","QUARTA-FEIRA","QUINTA-FEIRA","SEXTA-FEIRA","SÁBADO"];
+const limpaNome = s => (s||"").replace(/[​-‍⁠﻿]/g,"").replace(/\s+/g," ").trim().slice(0,40);
+function hojeISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function fmtData(iso){ const [y,m,d]=iso.split("-").map(Number); return { br:`${String(d).padStart(2,"0")}/${String(m).padStart(2,"0")}/${y}`, dia:DIAS[new Date(y,m-1,d).getDay()] }; }
+const fmtHora = h => (h||"").slice(0,5).replace(":","h");
+const fmtNum = n => Number(n).toLocaleString("pt-BR",{maximumFractionDigits:1});
+const mapsUrl = p => p.local_maps_url || ("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.local_saida));
+const linkPedal = id => location.origin + location.pathname + "?pedal=" + id;
+const ERROS = {
+  NOME_INVALIDO:"Digite um nome com pelo menos 2 letras.",
+  NOME_REPETIDO:"Esse nome já está na lista. Se for outra pessoa, coloque o sobrenome ou a inicial.",
+  LOTADO:"Poxa, as vagas acabaram! 😕",
+  PEDAL_FECHADO:"As inscrições deste pedal estão encerradas.",
+  SENHA_INVALIDA:"Senha incorreta."
+};
+function traduzErro(e){ const m=(e&&(e.message||e.msg||String(e)))||""; for(const k in ERROS) if(m.includes(k)) return ERROS[k]; console.error(e); return "Não deu certo agora. Confira a internet e tente de novo."; }
+let toastT; function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("on"),2600); }
+async function copiar(texto){
+  try { await navigator.clipboard.writeText(texto); return true; }
+  catch { const ta=document.createElement("textarea"); ta.value=texto; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); let ok=false; try{ ok=document.execCommand("copy"); }catch{} ta.remove(); return ok; }
+}
+function modal({titulo,texto,senha=false,ok="OK"}){
+  return new Promise(res=>{
+    $("mTitulo").textContent=titulo; $("mTexto").textContent=texto||"";
+    const inp=$("mInput"); inp.value=""; inp.classList.toggle("esconde",!senha);
+    $("mSim").textContent=ok; $("modal").classList.add("on"); if(senha) setTimeout(()=>inp.focus(),50);
+    const fim=v=>{ $("modal").classList.remove("on"); $("mSim").onclick=$("mNao").onclick=inp.onkeydown=null; res(v); };
+    $("mSim").onclick=()=>fim(senha?inp.value:true); $("mNao").onclick=()=>fim(senha?null:false);
+    inp.onkeydown=e=>{ if(e.key==="Enter") fim(inp.value); };
+  });
+}
+
+/* ---------- backend (Supabase ou demo) ---------- */
+function apiSupabase(){
+  const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  const ok = ({data,error}) => { if(error) throw error; return data; };
+  return {
+    async pedal(id){
+      if(id){ const r=ok(await sb.from("pedais").select("*").eq("id",id).maybeSingle()); if(r) return r; }
+      const prox=ok(await sb.from("pedais").select("*").gte("data",hojeISO()).order("data").order("hora_saida").limit(1));
+      if(prox.length) return prox[0];
+      const ult=ok(await sb.from("pedais").select("*").order("data",{ascending:false}).limit(1));
+      return ult[0]||null;
+    },
+    async todos(){ return ok(await sb.from("pedais").select("*").order("data",{ascending:false}).limit(50)); },
+    async lista(id){ return ok(await sb.rpc("lista",{p_pedal:id})); },
+    async entrar(id,nome){ return ok(await sb.rpc("entrar",{p_pedal:id,p_nome:nome})); },
+    async sair(id,token){ return ok(await sb.rpc("sair",{p_id:id,p_token:token})); },
+    async login(s){ return ok(await sb.rpc("admin_login",{p_senha:s})); },
+    async salvar(s,p){ return ok(await sb.rpc("admin_salvar_pedal",{p_senha:s,p})); },
+    async excluir(s,id){ return ok(await sb.rpc("admin_excluir_pedal",{p_senha:s,p_pedal:id})); },
+    async remover(s,id){ return ok(await sb.rpc("admin_remover",{p_senha:s,p_inscricao:id})); },
+    async adicionar(s,id,nome){ return ok(await sb.rpc("admin_adicionar",{p_senha:s,p_pedal:id,p_nome:nome})); }
+  };
+}
+function apiDemo(){
+  const uid=()=> (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
+  const d=new Date(); d.setDate(d.getDate()+((7-d.getDay())%7||7));
+  const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const p1={id:"demo-1",titulo:"Paranapiacaba x Quarta Divisão",data:iso,hora_saida:"07:00:00",local_saida:"Azul de Fome - Avenida Portugal",local_maps_url:null,distancia_km:75,elevacao_m:1000,strava_url:"https://www.strava.com/",aviso:"Não indicado para iniciantes!",observacoes:"Levar 2 caramanholas, câmara reserva e lanche. Parada para o café na vila.",limite:null,ativo:true};
+  const db={pedais:[p1], insc:["Macho Véio","Original","Olivieri","Denis Santos","Rapha","Fernanda","Fábio S.","Everaldo","Felipe"].map((n,i)=>({id:uid(),pedal_id:"demo-1",nome:n,token:uid(),criado_em:i}))};
+  const espera=()=>new Promise(r=>setTimeout(r,150)); const adm=s=>{ if(s!=="demo") throw new Error("SENHA_INVALIDA"); };
+  return {
+    async pedal(id){ await espera(); return db.pedais.find(p=>p.id===id) || [...db.pedais].sort((a,b)=>a.data.localeCompare(b.data)).find(p=>p.data>=hojeISO()) || db.pedais[0] || null; },
+    async todos(){ return [...db.pedais].sort((a,b)=>b.data.localeCompare(a.data)); },
+    async lista(id){ await espera(); return db.insc.filter(i=>i.pedal_id===id).map(({id,nome,criado_em})=>({id,nome,criado_em})); },
+    async entrar(id,nome){ await espera(); const p=db.pedais.find(x=>x.id===id); nome=limpaNome(nome);
+      if(nome.length<2) throw new Error("NOME_INVALIDO"); if(!p||!p.ativo) throw new Error("PEDAL_FECHADO");
+      const l=db.insc.filter(i=>i.pedal_id===id); if(l.some(i=>i.nome.toLowerCase()===nome.toLowerCase())) throw new Error("NOME_REPETIDO");
+      if(p.limite && l.length>=p.limite) throw new Error("LOTADO");
+      const r={id:uid(),pedal_id:id,nome,token:uid(),criado_em:Date.now()}; db.insc.push(r); return {id:r.id,token:r.token,nome}; },
+    async sair(id,token){ const n=db.insc.length; db.insc=db.insc.filter(i=>!(i.id===id&&i.token===token)); return db.insc.length<n; },
+    async login(s){ adm(s); return true; },
+    async salvar(s,p){ adm(s); const num=v=>v===""||v==null?null:Number(v); const o={...p,distancia_km:num(p.distancia_km),elevacao_m:num(p.elevacao_m),limite:num(p.limite),hora_saida:p.hora_saida+":00"};
+      for(const k of ["local_maps_url","strava_url","aviso","observacoes"]) if(!o[k]) o[k]=null;
+      if(!o.id){ o.id=uid(); db.pedais.push(o); } else { const i=db.pedais.findIndex(x=>x.id===o.id); db.pedais[i]=o; } return o.id; },
+    async excluir(s,id){ adm(s); db.pedais=db.pedais.filter(p=>p.id!==id); db.insc=db.insc.filter(i=>i.pedal_id!==id); },
+    async remover(s,id){ adm(s); db.insc=db.insc.filter(i=>i.id!==id); },
+    async adicionar(s,id,nome){ adm(s); nome=limpaNome(nome); if(nome.length<2) throw new Error("NOME_INVALIDO");
+      if(!db.insc.some(i=>i.pedal_id===id&&i.nome.toLowerCase()===nome.toLowerCase())) db.insc.push({id:uid(),pedal_id:id,nome,token:uid(),criado_em:Date.now()}); }
+  };
+}
+let api;
+try { api = DEMO ? apiDemo() : apiSupabase(); } catch(e){ console.error(e); api = apiDemo(); }
+
+/* ---------- estado ---------- */
+const st = { pedal:null, lista:[], senha: store.sget("giro_adm") };
+const minhaChave = () => st.pedal ? store.get("giro_insc_"+st.pedal.id) : null;
+
+/* ---------- mensagem do WhatsApp ---------- */
+function montarMensagem(){
+  const p=st.pedal, d=fmtData(p.data), L=[];
+  L.push(`🚵🏻‍♂️ ${CONFIG.CLUBE_NOME.toUpperCase()} CONVIDA VOCÊ! 🫵`,"",`🔥 ${p.titulo.toUpperCase()} 🔥`,"");
+  const partes=[]; if(p.distancia_km!=null) partes.push(`${fmtNum(p.distancia_km)} km`); if(p.elevacao_m!=null) partes.push(`${fmtNum(p.elevacao_m)} m de elevação`);
+  if(partes.length) L.push(`🚨 Distância: ${partes.join(" | ")}`,"");
+  L.push(`🗓️ DATA: ${d.br} – ${d.dia}`,"","⏰ SAÍDA:",`📍 ${fmtHora(p.hora_saida)} – ${p.local_saida}`);
+  if(p.strava_url) L.push("",`🗺️ ROTA: ${p.strava_url}`);
+  if(p.aviso) L.push("",`⚠️ ${p.aviso.toUpperCase()} 🚨`);
+  L.push("","🚴 LISTA DE CICLISTAS:","");
+  if(st.lista.length) st.lista.forEach((r,i)=>L.push(`${i+1}. ${r.nome}`)); else L.push("(seja o primeiro!)");
+  if(p.limite) L.push("",`🎟️ ${Math.max(0,p.limite-st.lista.length)} vaga(s) restante(s)`);
+  L.push("",`✍️ Coloque seu nome aqui: ${linkPedal(p.id)}`,"","🔥 Bora pedalar! 💪🚴‍♂️");
+  return L.join("\n");
+}
+
+/* ---------- renderização ---------- */
+function renderPedal(){
+  const p=st.pedal;
+  $("carregando").classList.add("esconde");
+  const tem=!!p;
+  $("semPedal").classList.toggle("esconde",tem);
+  for(const id of ["evento","boxEntrar","boxLista"]) $(id).classList.toggle("esconde",!tem);
+  if(!tem) return;
+  const d=fmtData(p.data);
+  document.title=`${p.titulo} – ${CONFIG.CLUBE_NOME}`;
+  $("evTitulo").textContent="🔥 "+p.titulo;
+  $("evData").innerHTML=""; $("evData").append(d.br," ",Object.assign(document.createElement("small"),{textContent:d.dia.toLowerCase()}));
+  $("evHora").textContent=fmtHora(p.hora_saida);
+  $("boxDist").classList.toggle("esconde",p.distancia_km==null); $("evDist").innerHTML=""; if(p.distancia_km!=null) $("evDist").append(fmtNum(p.distancia_km)," ",Object.assign(document.createElement("small"),{textContent:"km"}));
+  $("boxElev").classList.toggle("esconde",p.elevacao_m==null); $("evElev").innerHTML=""; if(p.elevacao_m!=null) $("evElev").append(fmtNum(p.elevacao_m)," ",Object.assign(document.createElement("small"),{textContent:"m"}));
+  const a=Object.assign(document.createElement("a"),{href:mapsUrl(p),target:"_blank",rel:"noopener",textContent:p.local_saida}); $("evLocal").replaceChildren(a);
+  $("evAviso").classList.toggle("esconde",!p.aviso); $("evAviso").textContent=p.aviso?("⚠️ "+p.aviso):"";
+  $("evObs").classList.toggle("esconde",!p.observacoes); $("evObs").textContent=p.observacoes||"";
+  $("evStrava").classList.toggle("esconde",!p.strava_url); if(p.strava_url) $("evStrava").href=p.strava_url;
+  renderLista();
+}
+function renderLista(){
+  const p=st.pedal; if(!p) return;
+  const eu=minhaChave(), n=st.lista.length;
+  const estouNaLista = eu && st.lista.some(r=>r.id===eu.id);
+  if(eu && !estouNaLista && st.listaCarregada) store.del("giro_insc_"+p.id); // fui removido pelo organizador
+  const lotado = p.limite && n>=p.limite;
+  const aberto = p.ativo && !lotado;
+  $("evStatus").className="status "+(aberto?"aberto":"fechado");
+  $("evStatus").textContent = !p.ativo ? "Inscrições encerradas" : lotado ? "Lotado" : "Inscrições abertas";
+  $("contador").textContent = p.limite ? `${n}/${p.limite}` : n;
+  $("barraVagas").classList.toggle("esconde",!p.limite); if(p.limite) $("barraVagasI").style.width=Math.min(100,n/p.limite*100)+"%";
+  $("jaEstou").classList.toggle("esconde",!estouNaLista);
+  $("formEntrar").classList.toggle("esconde",!!estouNaLista || !aberto);
+  if(estouNaLista) $("meuNome").textContent=eu.nome;
+  const fm=$("fechadoMsg"); fm.classList.toggle("esconde",!!estouNaLista || aberto); fm.textContent = !p.ativo ? ERROS.PEDAL_FECHADO : ERROS.LOTADO;
+  const ol=$("lista"); ol.replaceChildren();
+  if(!n){ const li=document.createElement("div"); li.className="vazio"; li.textContent="Ninguém ainda… seja o primeiro! 🚀"; ol.append(li); }
+  st.lista.forEach(r=>{
+    const li=document.createElement("li"); const s=document.createElement("span"); s.textContent=r.nome; li.append(s);
+    if(estouNaLista && r.id===eu.id){ li.classList.add("eu"); li.append(Object.assign(document.createElement("span"),{className:"tag",textContent:"você"})); }
+    if(st.senha){ const b=Object.assign(document.createElement("button"),{className:"rm",textContent:"Remover"}); b.onclick=()=>removerNome(r); li.append(b); }
+    ol.append(li);
+  });
+}
+
+/* ---------- carregar ---------- */
+async function carregarLista(){
+  if(!st.pedal) return;
+  try { st.lista = await api.lista(st.pedal.id) || []; st.listaCarregada=true; renderLista(); } catch(e){ console.error(e); }
+}
+async function carregar(id){
+  try {
+    st.pedal = await api.pedal(id || new URLSearchParams(location.search).get("pedal"));
+    st.listaCarregada=false; st.lista=[];
+    renderPedal(); await carregarLista();
+  } catch(e){ $("carregando").textContent="Não foi possível carregar. Atualize a página."; console.error(e); }
+}
+
+/* ---------- ações do ciclista ---------- */
+$("fEntrar").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const nome=limpaNome($("inNome").value), msg=$("msgEntrar"); msg.className="msg"; msg.textContent="";
+  if(nome.length<2){ msg.className="msg erro"; msg.textContent=ERROS.NOME_INVALIDO; return; }
+  $("btEntrar").disabled=true;
+  try {
+    const r = await api.entrar(st.pedal.id, nome);
+    store.set("giro_insc_"+st.pedal.id, r); store.set("giro_ultimo_nome", r.nome);
+    msg.className="msg ok"; msg.textContent="Show! Você está na lista. Bora pedalar! 💪";
+    await carregarLista();
+  } catch(err){ msg.className="msg erro"; msg.textContent=traduzErro(err); await carregarLista(); }
+  finally { $("btEntrar").disabled=false; }
+});
+$("btSair").onclick = async ()=>{
+  const eu=minhaChave(); if(!eu) return;
+  if(!await modal({titulo:"Sair da lista?",texto:`Tirar "${eu.nome}" da lista deste pedal?`,ok:"Sair"})) return;
+  try { await api.sair(eu.id, eu.token); store.del("giro_insc_"+st.pedal.id); $("msgEntrar").textContent=""; toast("Você saiu da lista"); await carregarLista(); }
+  catch(e){ toast(traduzErro(e)); }
+};
+$("btWpp").onclick = ()=>{ window.open("https://wa.me/?text="+encodeURIComponent(montarMensagem()),"_blank","noopener"); };
+$("btCopiar").onclick = async ()=>{ toast(await copiar(montarMensagem()) ? "Mensagem copiada! Cole no grupo 📋" : "Não consegui copiar"); };
+$("btLink").onclick = async ()=>{ toast(await copiar(linkPedal(st.pedal.id)) ? "Link copiado! 🔗" : "Não consegui copiar"); };
+
+/* ---------- organizador ---------- */
+async function entrarAdm(){
+  const s = await modal({titulo:"Área do organizador",texto:"Digite a senha do organizador.",senha:true,ok:"Entrar"});
+  if(!s) return;
+  try { await api.login(s); st.senha=s; store.sset("giro_adm",s); abrirAdm(); toast("Modo organizador ativado"); }
+  catch(e){ toast(traduzErro(e)); }
+}
+async function abrirAdm(){
+  $("boxAdm").classList.remove("esconde"); $("btAbrirAdm").classList.add("esconde");
+  await preencherSelect(st.pedal && st.pedal.id); preencherForm(st.pedal); renderLista();
+}
+function fecharAdm(){ st.senha=null; store.sset("giro_adm",null); $("boxAdm").classList.add("esconde"); $("btAbrirAdm").classList.remove("esconde"); renderLista(); }
+async function preencherSelect(sel){
+  const todos = await api.todos(); const s=$("selPedal"); s.replaceChildren();
+  if(!todos.length) s.append(new Option("— nenhum pedal ainda —",""));
+  todos.forEach(p=>{ const d=fmtData(p.data); s.append(new Option(`${d.br} · ${p.titulo}${p.ativo?"":" (encerrado)"}`, p.id)); });
+  if(sel) s.value=sel;
+}
+function preencherForm(p, duplicar=false){
+  $("pId").value = p && !duplicar ? p.id : "";
+  $("pTitulo").value = p?.titulo || ""; $("pData").value = duplicar ? "" : (p?.data || "");
+  $("pHora").value = (p?.hora_saida || "07:00").slice(0,5); $("pLocal").value = p?.local_saida || "";
+  $("pMaps").value = p?.local_maps_url || ""; $("pDist").value = p?.distancia_km ?? ""; $("pElev").value = p?.elevacao_m ?? "";
+  $("pLimite").value = p?.limite ?? ""; $("pStrava").value = p?.strava_url || ""; $("pAviso").value = p?.aviso || "";
+  $("pObs").value = p?.observacoes || ""; $("pAtivo").checked = duplicar || !p ? true : !!p.ativo;
+  $("btSalvar").textContent = $("pId").value ? "💾 Salvar alterações" : "💾 Criar pedal";
+  $("btExcluir").classList.toggle("esconde", !$("pId").value);
+}
+$("btAbrirAdm").onclick = entrarAdm;
+$("btSairAdm").onclick = fecharAdm;
+$("selPedal").onchange = async e=>{ if(!e.target.value) return; await carregar(e.target.value); history.replaceState(null,"","?pedal="+e.target.value); preencherForm(st.pedal); };
+$("btNovo").onclick = ()=>{ preencherForm(null); $("pTitulo").focus(); toast("Preencha os dados do novo pedal"); };
+$("btDuplicar").onclick = ()=>{ if(!st.pedal) return; preencherForm(st.pedal,true); $("pData").focus(); toast("Copiado! Agora é só escolher a data"); };
+$("fPedal").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const p = { id:$("pId").value, titulo:$("pTitulo").value.trim(), data:$("pData").value, hora_saida:$("pHora").value, local_saida:$("pLocal").value.trim(),
+    local_maps_url:$("pMaps").value.trim(), distancia_km:$("pDist").value, elevacao_m:$("pElev").value, limite:$("pLimite").value,
+    strava_url:$("pStrava").value.trim(), aviso:$("pAviso").value.trim(), observacoes:$("pObs").value.trim(), ativo:$("pAtivo").checked };
+  $("btSalvar").disabled=true;
+  try {
+    const id = await api.salvar(st.senha, p);
+    history.replaceState(null,"","?pedal="+id); await carregar(id); await preencherSelect(id); preencherForm(st.pedal);
+    toast(p.id ? "Pedal atualizado ✅" : "Pedal criado! Agora é só mandar no grupo 🚴");
+  } catch(err){ toast(traduzErro(err)); if(String(err.message||"").includes("SENHA")) fecharAdm(); }
+  finally { $("btSalvar").disabled=false; }
+});
+$("btExcluir").onclick = async ()=>{
+  if(!st.pedal) return;
+  if(!await modal({titulo:"Excluir pedal?",texto:`"${st.pedal.titulo}" e toda a lista serão apagados. Não dá pra desfazer.`,ok:"Excluir"})) return;
+  try { await api.excluir(st.senha, st.pedal.id); history.replaceState(null,"",location.pathname); await carregar(); await preencherSelect(st.pedal && st.pedal.id); preencherForm(st.pedal); toast("Pedal excluído"); }
+  catch(e){ toast(traduzErro(e)); }
+};
+async function removerNome(r){
+  if(!await modal({titulo:"Remover da lista?",texto:`Tirar "${r.nome}" da lista?`,ok:"Remover"})) return;
+  try { await api.remover(st.senha, r.id); await carregarLista(); toast("Removido"); } catch(e){ toast(traduzErro(e)); }
+}
+$("fAdmAdd").addEventListener("submit", async e=>{
+  e.preventDefault(); const nome=limpaNome($("inAdmNome").value); if(nome.length<2) return toast(ERROS.NOME_INVALIDO);
+  try { await api.adicionar(st.senha, st.pedal.id, nome); $("inAdmNome").value=""; await carregarLista(); toast(nome+" adicionado ✅"); } catch(err){ toast(traduzErro(err)); }
+});
+
+/* ---------- início ---------- */
+$("nomeClube").textContent=CONFIG.CLUBE_NOME; $("convidaTxt").textContent=CONFIG.CLUBE_NOME; $("slogan").textContent=CONFIG.SLOGAN;
+$("logoTopo").src=CONFIG.LOGO; $("logoTopo").onerror=function(){ this.style.display="none"; };
+$("imgCapa").src=CONFIG.CAPA; $("imgCapa").onerror=()=>$("capa").classList.add("esconde");
+if(CONFIG.INSTAGRAM){ $("insta").append(Object.assign(document.createElement("a"),{href:CONFIG.INSTAGRAM,target:"_blank",rel:"noopener",textContent:"Instagram"})); }
+if(DEMO) $("tagDemo").classList.remove("esconde");
+const ult=store.get("giro_ultimo_nome"); if(ult) $("inNome").value=ult;
+
+carregar().then(()=>{ if(st.senha) abrirAdm(); if(new URLSearchParams(location.search).has("admin") && !st.senha) entrarAdm(); });
+setInterval(()=>{ if(document.visibilityState==="visible") carregarLista(); }, 10000);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") carregarLista(); });
+})();
+</script>
+</body>
+</html>
