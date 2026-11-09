@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerador de foto – Giro ABC</title>
+<meta name="description" content="Monte sua foto do pedal com o Strava e o logo do Giro ABC para postar no Instagram.">
+<meta name="theme-color" content="#0b0b0b">
+<meta property="og:title" content="Gerador de foto – Giro ABC">
+<meta property="og:description" content="Sua foto + o PNG do Strava + o logo do Giro ABC, prontos pro Instagram.">
+<meta property="og:image" content="https://pedalgiroabc.com.br/capa.jpg">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* Mesma configuração do index.html (usada só para puxar o nome do último pedal) */
+const CONFIG = {
+  SUPABASE_URL: "https://qmsycehcwxttgekjsayu.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_S9oDws7xvm_qL--ewklJow_9fY67_6l",
+  CLUBE_NOME: "Giro ABC",
+  SITE: "pedalgiroabc.com.br",
+  LOGO: "logo-transparente.png"
+};
+</script>
+<style>
+  :root{--bg:#0b0b0b;--card:#151515;--card2:#1d1d1d;--linha:#2a2a2a;--amarelo:#FFC72C;--texto:#f4f4f4;--suave:#a3a3a3;--r:16px;--wpp:#25D366}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--texto);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  button{font:inherit;cursor:pointer}
+  .wrap{max-width:640px;margin:0 auto;padding:0 14px 40px}
+  header.topo{position:sticky;top:0;z-index:5;background:rgba(11,11,11,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--linha)}
+  header.topo .in{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:8px 14px}
+  header.topo img{width:38px;height:38px}
+  header.topo .nome{font-family:Anton,Impact,sans-serif;font-size:22px;color:var(--amarelo);text-transform:uppercase}
+  header.topo a.voltar{margin-left:auto;color:var(--suave);font-size:14px;text-decoration:none;border:1px solid var(--linha);border-radius:99px;padding:6px 12px}
+  h1{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:clamp(28px,7vw,38px);text-transform:uppercase;margin:18px 0 4px}
+  .sub{color:var(--suave);margin:0 0 14px;font-size:15px;line-height:1.45}
+  .card{background:var(--card);border:1px solid var(--linha);border-radius:var(--r);padding:16px;margin-top:14px}
+  .palco{position:relative;background:#000;border-radius:12px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+  canvas{display:block;width:100%;height:auto}
+  .dica{font-size:13px;color:var(--suave);text-align:center;margin-top:10px}
+  .uploads{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .up{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:86px;border:2px dashed #3a3a3a;border-radius:14px;background:var(--card2);cursor:pointer;text-align:center;padding:10px;font-weight:800}
+  .up small{font-weight:500;color:var(--suave);font-size:12px}
+  .up.ok{border-style:solid;border-color:var(--amarelo)}
+  .up input{display:none}
+  .rot{font-size:12px;font-weight:700;letter-spacing:.6px;color:var(--suave);text-transform:uppercase;margin:16px 0 8px}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{flex:1 1 auto;background:var(--card2);color:var(--texto);border:1px solid var(--linha);border-radius:10px;padding:10px 8px;font-weight:700;font-size:14px}
+  .seg button.on{background:var(--amarelo);color:#000;border-color:var(--amarelo)}
+  input[type=range]{width:100%;accent-color:var(--amarelo);height:28px}
+  input[type=text]{width:100%;background:#0f0f0f;border:1px solid #333;color:var(--texto);border-radius:12px;padding:12px 14px;font:inherit;font-size:16px;outline:none}
+  input[type=text]:focus{border-color:var(--amarelo)}
+  .chk{display:flex;align-items:center;gap:10px;margin-top:14px;font-weight:600}
+  .chk input{width:22px;height:22px;accent-color:var(--amarelo)}
+  .acoes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:12px;padding:15px 14px;font-weight:800;font-size:16px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.amarelo{background:var(--amarelo);color:#000}
+  .btn.fantasma{background:transparent;color:var(--texto);border:1px solid var(--linha)}
+  .esconde{display:none!important}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);background:#fff;color:#000;font-weight:700;padding:12px 18px;border-radius:12px;opacity:0;transition:.25s;z-index:50;max-width:90vw;text-align:center;pointer-events:none}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  footer{text-align:center;color:var(--suave);font-size:13px;margin-top:24px}
+  footer a{color:var(--amarelo)}
+</style>
+</head>
+<body>
+<header class="topo"><div class="in">
+  <img src="logo-transparente.png" alt="">
+  <span class="nome">Giro ABC</span>
+  <a class="voltar" href="./">← Lista do pedal</a>
+</div></header>
+
+<main class="wrap">
+  <h1>📸 Foto do pedal</h1>
+  <p class="sub">Escolha sua foto e o PNG do Strava. O site monta a imagem com o logo do Giro ABC, pronta pro Instagram. Suas fotos não saem do seu celular.</p>
+
+  <div class="card">
+    <div class="uploads">
+      <label class="up" id="upFoto">📷 Sua foto<small id="upFotoTxt">toque para escolher</small><input type="file" id="inFoto" accept="image/*"></label>
+      <label class="up" id="upStrava">🟧 PNG do Strava<small id="upStravaTxt">opcional</small><input type="file" id="inStrava" accept="image/png,image/*"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="palco" id="palco"><canvas id="cv"></canvas></div>
+    <div class="dica" id="dica">Arraste para ajustar a foto. Toque e arraste o Strava para mudar ele de lugar.</div>
+    <div class="acoes">
+      <button class="btn amarelo" id="btShare" disabled>📲 Compartilhar</button>
+      <button class="btn fantasma" id="btBaixar" disabled>⬇️ Baixar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="rot" style="margin-top:0">Formato</div>
+    <div class="seg" id="segFormato">
+      <button data-v="feed" class="on">Feed 4:5</button>
+      <button data-v="story">Story 9:16</button>
+      <button data-v="quadrado">Quadrado</button>
+    </div>
+
+    <div class="rot">Zoom da foto</div>
+    <input type="range" id="rgZoom" min="100" max="300" value="100">
+
+    <div id="ctlStrava" class="esconde">
+      <div class="rot">Tamanho do Strava</div>
+      <input type="range" id="rgStrava" min="20" max="100" value="70">
+      <div class="rot">Cor do Strava</div>
+      <div class="seg" id="segCor">
+        <button data-v="original" class="on">Original</button>
+        <button data-v="#ffffff">Branco</button>
+        <button data-v="#FFC72C">Amarelo</button>
+        <button data-v="#000000">Preto</button>
+      </div>
+    </div>
+
+    <div class="rot">Logo</div>
+    <div class="seg" id="segLogo">
+      <button data-v="se" class="on">↖ Topo esq.</button>
+      <button data-v="sd">↗ Topo dir.</button>
+      <button data-v="ie">↙ Base esq.</button>
+      <button data-v="id">↘ Base dir.</button>
+    </div>
+    <div class="rot">Tamanho do logo</div>
+    <input type="range" id="rgLogo" min="10" max="40" value="22">
+
+    <div class="rot">Texto na foto (opcional)</div>
+    <input type="text" id="inTitulo" maxlength="60" placeholder="Ex.: Paranapiacaba x Quarta Divisão">
+    <input type="text" id="inSub" maxlength="60" placeholder="Ex.: 08/11/2026" style="margin-top:8px">
+
+    <label class="chk"><input type="checkbox" id="ckSombra" checked> Escurecer as bordas (deixa o texto mais legível)</label>
+    <label class="chk"><input type="checkbox" id="ckSite" checked> Mostrar o endereço do site</label>
+  </div>
+
+  <footer>#giroabc · <a href="./">pedalgiroabc.com.br</a></footer>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const FORMATOS = { feed:[1080,1350], story:[1080,1920], quadrado:[1080,1080] };
+const cv = $("cv"), ctx = cv.getContext("2d");
+
+const st = {
+  formato:"feed",
+  foto:null, zoom:1, ox:0, oy:0,                 // deslocamento da foto (px do canvas)
+  strava:null, stravaTint:null, cor:"original", sEsc:0.7, sx:0.5, sy:0.62,   // centro do Strava em fração do canvas
+  logo:null, logoPos:"se", logoEsc:0.22,
+  titulo:"", sub:"", sombra:true, site:true
+};
+
+let toastT; function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("on"),2600); }
+
+function carregarImagem(src){
+  return new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=src; });
+}
+function lerArquivo(file){
+  return carregarImagem(URL.createObjectURL(file));
+}
+
+/* ---------- Strava colorido ---------- */
+function gerarTint(){
+  if(!st.strava){ st.stravaTint=null; return; }
+  if(st.cor==="original"){ st.stravaTint=st.strava; return; }
+  const c=document.createElement("canvas"); c.width=st.strava.naturalWidth; c.height=st.strava.naturalHeight;
+  const x=c.getContext("2d"); x.drawImage(st.strava,0,0); x.globalCompositeOperation="source-in"; x.fillStyle=st.cor; x.fillRect(0,0,c.width,c.height);
+  st.stravaTint=c;
+}
+
+/* ---------- geometria ---------- */
+function geoFoto(W,H){
+  const f=st.foto; const iw=f.naturalWidth, ih=f.naturalHeight;
+  const base=Math.max(W/iw,H/ih)*st.zoom; const w=iw*base, h=ih*base;
+  // limita para a foto sempre cobrir o quadro
+  const maxX=(w-W)/2, maxY=(h-H)/2;
+  st.ox=Math.max(-maxX,Math.min(maxX,st.ox)); st.oy=Math.max(-maxY,Math.min(maxY,st.oy));
+  return { x:(W-w)/2+st.ox, y:(H-h)/2+st.oy, w, h };
+}
+function geoStrava(W,H){
+  const s=st.stravaTint; if(!s) return null;
+  const sw=s.naturalWidth||s.width, sh=s.naturalHeight||s.height;
+  const w=W*st.sEsc, h=w*sh/sw;
+  return { x:st.sx*W-w/2, y:st.sy*H-h/2, w, h };
+}
+function geoLogo(W,H){
+  const l=st.logo; if(!l) return null;
+  const w=W*st.logoEsc, h=w*l.naturalHeight/l.naturalWidth, m=W*0.045;
+  const top = st.logoPos[0]==="s"; const esq = st.logoPos[1]==="e";
+  const yTopo = st.formato==="story" ? H*0.07 : m;              // story: foge da barra do Instagram
+  return { x: esq ? m : W-w-m, y: top ? yTopo : H-h-m-(st.site?W*0.035:0)-(st.formato==="story"?H*0.06:0), w, h };
+}
+
+/* ---------- desenho ---------- */
+function desenhar(){
+  const [W,H]=FORMATOS[st.formato]; if(cv.width!==W||cv.height!==H){ cv.width=W; cv.height=H; }
+  ctx.save(); ctx.fillStyle="#0b0b0b"; ctx.fillRect(0,0,W,H);
+
+  if(st.foto){ const g=geoFoto(W,H); ctx.drawImage(st.foto,g.x,g.y,g.w,g.h); }
+  else {
+    ctx.fillStyle="#141414"; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#555"; ctx.font="700 44px Inter, sans-serif"; ctx.textAlign="center";
+    ctx.fillText("📷 Escolha sua foto", W/2, H/2+15);
+  }
+
+  if(st.sombra){
+    let gr=ctx.createLinearGradient(0,0,0,H*0.28); gr.addColorStop(0,"rgba(0,0,0,.55)"); gr.addColorStop(1,"rgba(0,0,0,0)"); ctx.fillStyle=gr; ctx.fillRect(0,0,W,H*0.28);
+    gr=ctx.createLinearGradient(0,H*0.5,0,H); gr.addColorStop(0,"rgba(0,0,0,0)"); gr.addColorStop(1,"rgba(0,0,0,.75)"); ctx.fillStyle=gr; ctx.fillRect(0,H*0.5,W,H*0.5);
+  }
+
+  // textos na base
+  const pad=W*0.06; let base=H-(st.formato==="story"?H*0.11:W*0.06);
+  ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+  if(st.site){
+    ctx.font=`600 ${Math.round(W*0.026)}px Inter, sans-serif`; ctx.fillStyle="rgba(255,255,255,.75)";
+    ctx.fillText(CONFIG.SITE, W/2, base); base-=W*0.05;
+  }
+  if(st.sub){
+    ctx.font=`700 ${Math.round(W*0.034)}px Inter, sans-serif`; ctx.fillStyle="#ffffff";
+    ctx.fillText(st.sub.toUpperCase(), W/2, base); base-=W*0.055;
+  }
+  if(st.titulo){
+    let tam=W*0.075; ctx.font=`${Math.round(tam)}px Anton, Impact, sans-serif`;
+    const t=st.titulo.toUpperCase(); while(ctx.measureText(t).width>W-pad*2 && tam>24){ tam-=2; ctx.font=`${Math.round(tam)}px Anton, Impact, sans-serif`; }
+    ctx.fillStyle="#FFC72C"; ctx.shadowColor="rgba(0,0,0,.5)"; ctx.shadowBlur=12; ctx.fillText(t, W/2, base); ctx.shadowBlur=0;
+  }
+
+  const s=geoStrava(W,H); if(s){ ctx.shadowColor="rgba(0,0,0,.35)"; ctx.shadowBlur=10; ctx.drawImage(st.stravaTint,s.x,s.y,s.w,s.h); ctx.shadowBlur=0; }
+  const l=geoLogo(W,H); if(l){ ctx.shadowColor="rgba(0,0,0,.45)"; ctx.shadowBlur=18; ctx.drawImage(st.logo,l.x,l.y,l.w,l.h); ctx.shadowBlur=0; }
+  ctx.restore();
+
+  $("btShare").disabled=$("btBaixar").disabled=!st.foto;
+}
+let pend=false; function render(){ if(pend) return; pend=true; requestAnimationFrame(()=>{ pend=false; desenhar(); }); }
+
+/* ---------- arrastar (foto ou Strava) ---------- */
+let drag=null;
+function ponto(e){ const r=cv.getBoundingClientRect(); return { x:(e.clientX-r.left)*cv.width/r.width, y:(e.clientY-r.top)*cv.height/r.height }; }
+cv.addEventListener("pointerdown",e=>{
+  const p=ponto(e), s=geoStrava(cv.width,cv.height);
+  if(s && p.x>=s.x && p.x<=s.x+s.w && p.y>=s.y && p.y<=s.y+s.h) drag={alvo:"strava",p0:p,sx:st.sx,sy:st.sy};
+  else if(st.foto) drag={alvo:"foto",p0:p,ox:st.ox,oy:st.oy};
+  else return;
+  cv.setPointerCapture(e.pointerId); e.preventDefault();
+});
+cv.addEventListener("pointermove",e=>{
+  if(!drag) return; const p=ponto(e), dx=p.x-drag.p0.x, dy=p.y-drag.p0.y;
+  if(drag.alvo==="strava"){ st.sx=Math.max(0,Math.min(1,drag.sx+dx/cv.width)); st.sy=Math.max(0,Math.min(1,drag.sy+dy/cv.height)); }
+  else { st.ox=drag.ox+dx; st.oy=drag.oy+dy; }
+  render();
+});
+const soltar=()=>{ drag=null; }; cv.addEventListener("pointerup",soltar); cv.addEventListener("pointercancel",soltar);
+
+/* ---------- controles ---------- */
+$("inFoto").addEventListener("change", async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try { st.foto=await lerArquivo(f); st.ox=st.oy=0; st.zoom=1; $("rgZoom").value=100;
+    $("upFoto").classList.add("ok"); $("upFotoTxt").textContent="✓ foto escolhida"; render(); }
+  catch { toast("Não consegui abrir essa foto. Tente outra (JPG ou PNG)."); }
+});
+$("inStrava").addEventListener("change", async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try { st.strava=await lerArquivo(f); gerarTint(); $("ctlStrava").classList.remove("esconde");
+    $("upStrava").classList.add("ok"); $("upStravaTxt").textContent="✓ PNG escolhido"; render(); }
+  catch { toast("Não consegui abrir esse arquivo do Strava."); }
+});
+function segmento(id,fn){ $(id).addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
+  [...$(id).children].forEach(x=>x.classList.toggle("on",x===b)); fn(b.dataset.v); render(); }); }
+segmento("segFormato",v=>{ st.formato=v; });
+segmento("segCor",v=>{ st.cor=v; gerarTint(); });
+segmento("segLogo",v=>{ st.logoPos=v; });
+$("rgZoom").addEventListener("input",e=>{ st.zoom=e.target.value/100; render(); });
+$("rgStrava").addEventListener("input",e=>{ st.sEsc=e.target.value/100; render(); });
+$("rgLogo").addEventListener("input",e=>{ st.logoEsc=e.target.value/100; render(); });
+$("inTitulo").addEventListener("input",e=>{ st.titulo=e.target.value.trim(); render(); });
+$("inSub").addEventListener("input",e=>{ st.sub=e.target.value.trim(); render(); });
+$("ckSombra").addEventListener("change",e=>{ st.sombra=e.target.checked; render(); });
+$("ckSite").addEventListener("change",e=>{ st.site=e.target.checked; render(); });
+
+/* ---------- exportar ---------- */
+function gerarBlob(){ desenhar(); return new Promise(res=>cv.toBlob(res,"image/jpeg",0.92)); }
+function nomeArquivo(){ const d=new Date(); return `giro-abc-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}.jpg`; }
+$("btBaixar").onclick = async ()=>{
+  const blob=await gerarBlob(); const url=URL.createObjectURL(blob);
+  const a=Object.assign(document.createElement("a"),{href:url,download:nomeArquivo()}); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),5000); toast("Imagem salva! 📥");
+};
+$("btShare").onclick = async ()=>{
+  const blob=await gerarBlob(); const file=new File([blob],nomeArquivo(),{type:"image/jpeg"});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try { await navigator.share({files:[file], text:"#giroabc 🚴 "+CONFIG.SITE}); }
+    catch(e){ if(e.name!=="AbortError") toast("Não deu pra compartilhar. Use o Baixar."); }
+  } else { $("btBaixar").click(); toast("Seu navegador não compartilha direto. A imagem foi baixada 📥"); }
+};
+
+/* ---------- início ---------- */
+(async ()=>{
+  try { st.logo = await carregarImagem(CONFIG.LOGO); } catch { try { st.logo = await carregarImagem("logo.png"); } catch {} }
+  try { await document.fonts.load("80px Anton"); } catch {}
+  render();
+  // Puxa o título do último pedal para facilitar (o usuário pode apagar/editar)
+  try {
+    if(!window.supabase || !CONFIG.SUPABASE_URL) return;
+    const sb=supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    const id=new URLSearchParams(location.search).get("pedal");
+    const d=new Date(), hoje=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    let q=sb.from("pedais").select("titulo,data,distancia_km");
+    q = id ? q.eq("id",id) : q.lte("data",hoje).order("data",{ascending:false});
+    const { data } = await q.limit(1);
+    const p=data && data[0]; if(!p || $("inTitulo").value) return;
+    const [y,m,dd]=p.data.split("-");
+    $("inTitulo").value=p.titulo; $("inSub").value=`${dd}/${m}/${y}`;
+    st.titulo=p.titulo; st.sub=$("inSub").value; render();
+  } catch(e){ console.warn(e); }
+})();
+window.addEventListener("resize",render);
+})();
+</script>
+</body>
+</html>

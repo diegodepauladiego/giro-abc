@@ -9,8 +9,9 @@
 <!-- Prévia do link no WhatsApp: troque SEU-SITE pelo endereço final (ex.: https://diegodepauladiego.github.io/giro-abc) -->
 <meta property="og:title" content="Giro ABC – Lista do Pedal">
 <meta property="og:description" content="Mais que pedalar, é compartilhar caminhos! Coloque seu nome na lista.">
-<meta property="og:image" content="https://diegodepauladiego.github.io/giro-abc/capa.jpg">
+<meta property="og:image" content="https://pedalgiroabc.com.br/capa.jpg">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://pedalgiroabc.com.br/">
 <link rel="icon" href="logo.png">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -203,6 +204,7 @@ const CONFIG = {
       <button class="btn fantasma" id="btCopiar">📋 Copiar mensagem</button>
     </div>
     <button class="btn fantasma" id="btLink" style="margin-top:10px">🔗 Copiar link da lista</button>
+    <a class="btn amarelo" id="btFoto" href="foto.html" style="margin-top:10px">📸 Gerar foto do pedal pro Instagram</a>
   </section>
 
   <!-- Organizador -->
@@ -400,6 +402,7 @@ function renderPedal(){
   $("evAviso").classList.toggle("esconde",!p.aviso); $("evAviso").textContent=p.aviso?("⚠️ "+p.aviso):"";
   $("evObs").classList.toggle("esconde",!p.observacoes); $("evObs").textContent=p.observacoes||"";
   $("evStrava").classList.toggle("esconde",!p.strava_url); if(p.strava_url) $("evStrava").href=p.strava_url;
+  $("btFoto").href="foto.html?pedal="+encodeURIComponent(p.id);
   renderLista();
 }
 function renderLista(){
