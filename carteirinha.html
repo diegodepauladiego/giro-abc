@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minha carteirinha – Giro ABC</title>
+<meta name="description" content="Gere sua carteirinha do Giro ABC com contato de emergência e tipo sanguíneo, e coloque na tela de bloqueio do celular.">
+<meta name="theme-color" content="#0b0b0b">
+<meta property="og:title" content="Carteirinha do ciclista – Giro ABC">
+<meta property="og:description" content="Seus dados de emergência na tela de bloqueio do celular.">
+<meta property="og:image" content="https://pedalgiroabc.com.br/capa.jpg">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0b0b0b;--card:#151515;--card2:#1d1d1d;--linha:#2a2a2a;--amarelo:#FFC72C;--texto:#f4f4f4;--suave:#a3a3a3;--vermelho:#ff5a4f;--verde:#3ddc84;--r:16px}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--texto);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  button{font:inherit;cursor:pointer}
+  .wrap{max-width:640px;margin:0 auto;padding:0 14px 40px}
+  header.topo{position:sticky;top:0;z-index:5;background:rgba(11,11,11,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--linha)}
+  header.topo .in{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:8px 14px}
+  header.topo img{width:38px;height:38px}
+  header.topo .nome{font-family:Anton,Impact,sans-serif;font-size:22px;color:var(--amarelo);text-transform:uppercase}
+  header.topo a.voltar{margin-left:auto;color:var(--suave);font-size:14px;text-decoration:none;border:1px solid var(--linha);border-radius:99px;padding:6px 12px}
+  h1{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:clamp(28px,7vw,38px);text-transform:uppercase;margin:18px 0 4px}
+  h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:22px;text-transform:uppercase;margin:0 0 10px}
+  .sub{color:var(--suave);margin:0 0 6px;font-size:15px;line-height:1.45}
+  .privado{display:flex;gap:10px;align-items:flex-start;background:rgba(61,220,132,.08);border:1px solid rgba(61,220,132,.3);color:#c9f5dc;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.45;margin-top:12px}
+  .card{background:var(--card);border:1px solid var(--linha);border-radius:var(--r);padding:16px;margin-top:14px}
+  .campo{margin-top:12px}
+  .campo:first-child{margin-top:0}
+  label.rot{display:block;font-size:12px;font-weight:700;letter-spacing:.6px;color:var(--suave);text-transform:uppercase;margin-bottom:6px}
+  input[type=text],input[type=tel],select,textarea{width:100%;background:#0f0f0f;border:1px solid #333;color:var(--texto);border-radius:12px;padding:12px 14px;font:inherit;font-size:16px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--amarelo)}
+  .duas{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .foto-linha{display:flex;align-items:center;gap:14px}
+  .foto-prev{width:84px;height:84px;border-radius:50%;background:var(--card2) center/cover no-repeat;border:2px solid var(--amarelo);flex:none;display:grid;place-items:center;font-size:30px}
+  .up{display:inline-flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--linha);border-radius:12px;padding:12px 14px;font-weight:700;cursor:pointer}
+  .up input{display:none}
+  .sangue{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .sangue button{background:var(--card2);color:var(--texto);border:1px solid var(--linha);border-radius:10px;padding:11px 0;font-weight:800;font-size:15px}
+  .sangue button.on{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
+  .seg{display:flex;gap:6px}
+  .seg button{flex:1;background:var(--card2);color:var(--texto);border:1px solid var(--linha);border-radius:10px;padding:11px 8px;font-weight:700;font-size:14px}
+  .seg button.on{background:var(--amarelo);color:#000;border-color:var(--amarelo)}
+  .palco{background:#000;border-radius:12px;overflow:hidden;display:flex;justify-content:center}
+  canvas{display:block;max-width:100%;height:auto}
+  #cv.parede{max-height:70vh;width:auto}
+  .acoes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:12px;padding:15px 14px;font-weight:800;font-size:16px;text-decoration:none}
+  .btn.amarelo{background:var(--amarelo);color:#000}
+  .btn.fantasma{background:transparent;color:var(--texto);border:1px solid var(--linha)}
+  .btn.perigo{background:transparent;color:var(--vermelho);border:1px solid rgba(255,90,79,.5);font-size:14px;padding:11px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  details{background:var(--card2);border-radius:12px;padding:12px 14px;margin-top:10px}
+  details summary{font-weight:800;cursor:pointer}
+  details ol{margin:10px 0 0;padding-left:20px;color:#d6d6d6;line-height:1.55;font-size:14px}
+  .nota{font-size:13px;color:var(--suave);line-height:1.5;margin-top:10px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);background:#fff;color:#000;font-weight:700;padding:12px 18px;border-radius:12px;opacity:0;transition:.25s;z-index:50;max-width:90vw;text-align:center;pointer-events:none}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  footer{text-align:center;color:var(--suave);font-size:13px;margin-top:24px}
+  footer a{color:var(--amarelo)}
+</style>
+</head>
+<body>
+<header class="topo"><div class="in">
+  <img src="logo-transparente.png" alt="">
+  <span class="nome">Giro ABC</span>
+  <a class="voltar" href="./">← Lista do pedal</a>
+</div></header>
+
+<main class="wrap">
+  <h1>🪪 Minha carteirinha</h1>
+  <p class="sub">Preencha uma vez e gere a sua carteirinha do Giro ABC. Dá pra usar também como papel de parede da tela de bloqueio, assim quem te socorrer vê seus dados de emergência sem desbloquear o celular.</p>
+  <div class="privado">🔒 <span>Seus dados <b>não são enviados para nenhum servidor</b>. Ficam salvos só neste aparelho, pra você editar depois.</span></div>
+
+  <form class="card" id="form" autocomplete="on">
+    <div class="campo">
+      <label class="rot">Foto</label>
+      <div class="foto-linha">
+        <div class="foto-prev" id="fotoPrev">👤</div>
+        <label class="up">📷 Escolher foto<input type="file" id="inFoto" accept="image/*"></label>
+      </div>
+    </div>
+    <div class="campo"><label class="rot" for="nome">Nome *</label><input type="text" id="nome" maxlength="40" placeholder="Seu nome completo" autocomplete="name"></div>
+    <div class="campo"><label class="rot" for="apelido">Apelido no grupo</label><input type="text" id="apelido" maxlength="24" placeholder="Ex.: Didi"></div>
+    <div class="campo"><label class="rot" for="tel">Seu telefone</label><input type="tel" id="tel" maxlength="16" placeholder="(11) 90000-0000" autocomplete="tel" inputmode="tel"></div>
+
+    <div class="campo">
+      <label class="rot">Tipo sanguíneo</label>
+      <div class="sangue" id="sangue">
+        <button type="button">A+</button><button type="button">A-</button><button type="button">B+</button><button type="button">B-</button>
+        <button type="button">AB+</button><button type="button">AB-</button><button type="button">O+</button><button type="button">O-</button>
+      </div>
+    </div>
+
+    <div class="campo"><label class="rot" for="emNome">Contato de emergência *</label><input type="text" id="emNome" maxlength="30" placeholder="Nome (ex.: Bruna – esposa)"></div>
+    <div class="campo"><input type="tel" id="emTel" maxlength="16" placeholder="(11) 90000-0000" inputmode="tel"></div>
+
+    <div class="campo"><label class="rot" for="alergias">Alergias / observações médicas</label><input type="text" id="alergias" maxlength="70" placeholder="Ex.: alérgico a dipirona"></div>
+    <div class="duas">
+      <div class="campo"><label class="rot" for="plano">Plano de saúde</label><input type="text" id="plano" maxlength="30" placeholder="Ex.: Unimed"></div>
+      <div class="campo"><label class="rot" for="desde">Pedala com o Giro desde</label><input type="text" id="desde" maxlength="10" placeholder="Ex.: 2024"></div>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="seg" id="segModo">
+      <button data-v="cartao" class="on">🪪 Carteirinha</button>
+      <button data-v="parede">📱 Tela de bloqueio</button>
+    </div>
+    <div class="palco" style="margin-top:12px"><canvas id="cv"></canvas></div>
+    <div class="acoes">
+      <button class="btn amarelo" id="btShare">📲 Compartilhar</button>
+      <button class="btn fantasma" id="btBaixar">⬇️ Salvar imagem</button>
+    </div>
+
+    <details id="comoBloqueio">
+      <summary>Como colocar na tela de bloqueio</summary>
+      <ol>
+        <li>Escolha <b>📱 Tela de bloqueio</b> aqui em cima e toque em <b>Salvar imagem</b>. Ela vai pra galeria.</li>
+        <li><b>iPhone:</b> abra a foto em <b>Fotos</b> → botão de compartilhar → <b>Usar como Papel de Parede</b> → <b>Adicionar</b> → <b>Definir como Par de Papéis de Parede</b> (ou só tela bloqueada).</li>
+        <li><b>Android:</b> abra a foto na <b>Galeria</b> → ⋮ → <b>Definir como papel de parede</b> → <b>Tela de bloqueio</b>.</li>
+      </ol>
+    </details>
+    <p class="nota">💡 Dica: ative também a <b>Ficha Médica</b> do iPhone (app Saúde) ou as <b>Informações de emergência</b> do Android (Configurações → Segurança e emergência). Elas aparecem no botão "Emergência" da tela bloqueada, junto com a carteirinha.</p>
+  </div>
+
+  <button class="btn perigo" id="btApagar" style="margin-top:14px">🗑️ Apagar meus dados deste aparelho</button>
+  <footer>#giroabc · <a href="./">pedalgiroabc.com.br</a></footer>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const CHAVE = "giro_carteirinha_v1";
+const SITE = "pedalgiroabc.com.br";
+const CAMPOS = ["nome","apelido","tel","emNome","emTel","alergias","plano","desde"];
+const cv = $("cv"), ctx = cv.getContext("2d");
+const st = { modo:"cartao", sangue:"", foto:null, fotoData:null, logo:null };
+
+let toastT; function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("on"),2600); }
+const img = src => new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; });
+const val = id => $(id).value.trim();
+
+/* ---------- telefone com máscara ---------- */
+function mascara(v){ const d=v.replace(/\D/g,"").slice(0,11);
+  if(d.length<=2) return d.length?`(${d}`:"";
+  if(d.length<=6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if(d.length<=10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`; }
+["tel","emTel"].forEach(id=>$(id).addEventListener("input",e=>{ e.target.value=mascara(e.target.value); }));
+
+/* ---------- salvar/carregar no aparelho ---------- */
+function salvar(){
+  const d={ sangue:st.sangue, foto:st.fotoData }; CAMPOS.forEach(c=>d[c]=$(c).value);
+  try { localStorage.setItem(CHAVE, JSON.stringify(d)); } catch {}
+}
+async function carregar(){
+  let d=null; try { d=JSON.parse(localStorage.getItem(CHAVE)); } catch {}
+  if(!d) return;
+  CAMPOS.forEach(c=>{ if(d[c]!=null) $(c).value=d[c]; });
+  if(d.sangue) marcarSangue(d.sangue);
+  if(d.foto){ try { st.foto=await img(d.foto); st.fotoData=d.foto; $("fotoPrev").style.backgroundImage=`url(${d.foto})`; $("fotoPrev").textContent=""; } catch {} }
+}
+
+/* ---------- foto: recorta quadrada e reduz ---------- */
+$("inFoto").addEventListener("change", async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try {
+    const i=await img(URL.createObjectURL(f)); const lado=Math.min(i.naturalWidth,i.naturalHeight);
+    const c=document.createElement("canvas"); c.width=c.height=600;
+    c.getContext("2d").drawImage(i,(i.naturalWidth-lado)/2,(i.naturalHeight-lado)/2.6,lado,lado,0,0,600,600);
+    st.fotoData=c.toDataURL("image/jpeg",0.85); st.foto=await img(st.fotoData);
+    $("fotoPrev").style.backgroundImage=`url(${st.fotoData})`; $("fotoPrev").textContent="";
+    salvar(); render();
+  } catch { toast("Não consegui abrir essa foto. Tente outra."); }
+});
+
+/* ---------- tipo sanguíneo ---------- */
+function marcarSangue(v){ st.sangue=v; [...$("sangue").children].forEach(b=>b.classList.toggle("on",b.textContent===v)); }
+$("sangue").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; marcarSangue(st.sangue===b.textContent?"":b.textContent); salvar(); render(); });
+
+$("form").addEventListener("input",()=>{ salvar(); render(); });
+$("form").addEventListener("submit",e=>e.preventDefault());
+$("segModo").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
+  [...$("segModo").children].forEach(x=>x.classList.toggle("on",x===b)); st.modo=b.dataset.v; cv.classList.toggle("parede",st.modo==="parede"); render(); });
+
+/* ---------- utilidades de desenho ---------- */
+function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function caber(txt, fonte, tamMax, larg){ let t=tamMax; ctx.font=fonte(t); while(ctx.measureText(txt).width>larg && t>12){ t-=2; ctx.font=fonte(t); } return t; }
+const anton = t => `${t}px Anton, Impact, sans-serif`;
+const inter = (p,t) => `${p} ${t}px Inter, system-ui, sans-serif`;
+function fotoCirculo(cx,cy,r){
+  ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.closePath();
+  if(st.foto){ ctx.clip(); ctx.drawImage(st.foto,cx-r,cy-r,r*2,r*2); }
+  else { ctx.fillStyle="#222"; ctx.fill(); ctx.fillStyle="#555"; ctx.font=inter("400",r); ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("👤",cx,cy+r*0.05); }
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.lineWidth=r*0.07; ctx.strokeStyle="#FFC72C"; ctx.stroke();
+}
+function rotulo(txt,x,y,t){ ctx.font=inter("700",t); ctx.fillStyle="#9a9a9a"; ctx.fillText(txt.toUpperCase(),x,y); }
+function dado(txt,x,y,t,cor="#ffffff",peso="700"){ ctx.font=inter(peso,t); ctx.fillStyle=cor; ctx.fillText(txt,x,y); }
+
+/* ---------- carteirinha (formato cartão 85,6 x 54 mm) ---------- */
+function desenharCartao(){
+  const W=1700, H=1072; cv.width=W; cv.height=H;
+  ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+  ctx.fillStyle="#0b0b0b"; rr(0,0,W,H,60); ctx.fill();
+  ctx.save(); rr(0,0,W,H,60); ctx.clip();
+  // faixas diagonais amarelas
+  ctx.fillStyle="#FFC72C"; ctx.beginPath(); ctx.moveTo(W-430,0); ctx.lineTo(W,0); ctx.lineTo(W,H*0.42); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="rgba(255,199,44,.12)"; ctx.beginPath(); ctx.moveTo(W-620,0); ctx.lineTo(W-470,0); ctx.lineTo(W,H*0.62); ctx.lineTo(W,H*0.86); ctx.closePath(); ctx.fill();
+  if(st.logo){ ctx.globalAlpha=.06; ctx.drawImage(st.logo,W-760,H-700,820,820*st.logo.naturalHeight/st.logo.naturalWidth); ctx.globalAlpha=1; }
+  ctx.fillStyle="#FFC72C"; ctx.fillRect(0,H-26,W,26);
+  ctx.restore();
+
+  // cabeçalho
+  if(st.logo) ctx.drawImage(st.logo,60,50,150,150*st.logo.naturalHeight/st.logo.naturalWidth);
+  ctx.font=anton(76); ctx.fillStyle="#FFC72C"; ctx.fillText("GIRO ABC",235,128);
+  ctx.font=inter("700",30); ctx.fillStyle="#cfcfcf"; ctx.fillText("CARTEIRINHA DO CICLISTA",238,178);
+
+  // foto
+  fotoCirculo(250,560,190);
+
+  // nome e apelido
+  const x=500, larg=W-x-70;
+  const nome=val("nome")||"Seu nome";
+  const t=caber(nome.toUpperCase(),anton,96,larg); ctx.fillStyle="#fff"; ctx.fillText(nome.toUpperCase(),x,410);
+  if(val("apelido")) dado(`"${val("apelido")}"`,x,466,40,"#FFC72C","700");
+
+  // tipo sanguíneo (selo)
+  let y=560;
+  if(st.sangue){
+    ctx.fillStyle="#d7332b"; rr(x,y-62,190,96,22); ctx.fill();
+    ctx.font=inter("800",26); ctx.fillStyle="rgba(255,255,255,.85)"; ctx.fillText("🩸 SANGUE",x+18,y-30);
+    ctx.font=anton(48); ctx.fillStyle="#fff"; ctx.fillText(st.sangue,x+18,y+22);
+  }
+  if(val("tel")){ const xx=st.sangue?x+230:x; rotulo("Telefone",xx,y-30,26); dado(val("tel"),xx,y+18,46); }
+
+  // emergência
+  y=700;
+  ctx.fillStyle="rgba(255,90,79,.14)"; rr(x-24,y-58,larg+40,170,26); ctx.fill();
+  ctx.font=inter("800",28); ctx.fillStyle="#ff7a71"; ctx.fillText("🚨 EM CASO DE EMERGÊNCIA",x,y-12);
+  const emerg=[val("emNome"),val("emTel")].filter(Boolean).join("  ·  ")||"Contato de emergência";
+  caber(emerg,s=>inter("800",s),50,larg-10); ctx.fillStyle="#fff"; ctx.fillText(emerg,x,y+66);
+
+  // rodapé de dados
+  y=900; const extras=[];
+  if(val("alergias")) extras.push(["Alergias / obs.",val("alergias")]);
+  if(val("plano")) extras.push(["Plano de saúde",val("plano")]);
+  if(val("desde")) extras.push(["No Giro desde",val("desde")]);
+  let xx=60;
+  extras.forEach(([r,v],i)=>{ const w = i===0 && extras.length>1 ? 720 : 470;
+    rotulo(r,xx,y,24); caber(v,s=>inter("700",s),36,w-30); ctx.fillStyle="#fff"; ctx.fillText(v,xx,y+44); xx+=w; });
+  ctx.font=inter("600",24); ctx.fillStyle="#7d7d7d"; ctx.textAlign="right"; ctx.fillText(SITE,W-50,H-48); ctx.textAlign="left";
+}
+
+/* ---------- papel de parede (tela de bloqueio) ---------- */
+function desenharParede(){
+  const W=1170, H=2532; cv.width=W; cv.height=H;
+  ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#1a1a1a"); g.addColorStop(.45,"#0b0b0b"); g.addColorStop(1,"#000"); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  if(st.logo){ ctx.globalAlpha=.08; const lw=1000; ctx.drawImage(st.logo,(W-lw)/2,230,lw,lw*st.logo.naturalHeight/st.logo.naturalWidth); ctx.globalAlpha=1; }
+  // (topo livre para o relógio do celular)
+
+  let y=1020;
+  fotoCirculo(W/2,y,150); y+=230;
+  const nome=val("nome")||"Seu nome";
+  caber(nome.toUpperCase(),anton,96,W-140); ctx.fillStyle="#fff"; ctx.fillText(nome.toUpperCase(),W/2,y);
+  if(val("apelido")){ y+=60; dado(`"${val("apelido")}" · Giro ABC`,W/2,y,40,"#FFC72C"); } else { y+=60; dado("Giro ABC",W/2,y,40,"#FFC72C"); }
+
+  // bloco de emergência
+  y+=70; const bx=70, bw=W-140, bh=390;
+  ctx.fillStyle="#c92a22"; rr(bx,y,bw,bh,40); ctx.fill();
+  ctx.font=inter("800",40); ctx.fillStyle="#ffd9d6"; ctx.fillText("🚨 EM CASO DE EMERGÊNCIA LIGUE",W/2,y+80);
+  const emTel=val("emTel")||"(00) 00000-0000";
+  caber(emTel,anton,120,bw-60); ctx.fillStyle="#fff"; ctx.fillText(emTel,W/2,y+225);
+  caber(val("emNome")||"Contato de emergência",s=>inter("700",s),48,bw-60); ctx.fillStyle="#fff"; ctx.fillText(val("emNome")||"Contato de emergência",W/2,y+310);
+  y+=bh+50;
+
+  // linha: sangue + alergias
+  const cw=(bw-30)/2;
+  ctx.fillStyle="#1d1d1d"; rr(bx,y,cw,190,32); ctx.fill(); rr(bx+cw+30,y,cw,190,32); ctx.fill();
+  ctx.font=inter("700",30); ctx.fillStyle="#9a9a9a"; ctx.fillText("🩸 TIPO SANGUÍNEO",bx+cw/2,y+60); ctx.fillText("📞 MEU TELEFONE",bx+cw+30+cw/2,y+60);
+  ctx.font=anton(84); ctx.fillStyle="#ff6b62"; ctx.fillText(st.sangue||"—",bx+cw/2,y+160);
+  caber(val("tel")||"—",s=>inter("800",s),48,cw-40); ctx.fillStyle="#fff"; ctx.fillText(val("tel")||"—",bx+cw+30+cw/2,y+150);
+  y+=275;
+  const obs=[val("alergias") && ("⚠️ "+val("alergias")), val("plano") && ("🏥 "+val("plano"))].filter(Boolean);
+  obs.forEach(o=>{ caber(o,s=>inter("700",s),42,W-160); ctx.fillStyle="#f0f0f0"; ctx.fillText(o,W/2,y); y+=62; });
+
+  ctx.font=inter("600",30); ctx.fillStyle="#6f6f6f"; ctx.fillText("Giro ABC · "+SITE,W/2,H-260);
+}
+
+function render(){ if(st.modo==="cartao") desenharCartao(); else desenharParede(); }
+
+/* ---------- exportar ---------- */
+const nomeArq = () => `giro-abc-${st.modo==="cartao"?"carteirinha":"tela-bloqueio"}-${(val("apelido")||val("nome")||"ciclista").toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}.png`;
+function ok(){ if(!val("nome")||!val("emTel")){ toast("Preencha pelo menos o nome e o telefone de emergência"); ($( !val("nome")?"nome":"emTel")).focus(); return false; } return true; }
+function blob(){ render(); return new Promise(r=>cv.toBlob(r,"image/png")); }
+$("btBaixar").onclick = async ()=>{
+  if(!ok()) return; const b=await blob(), url=URL.createObjectURL(b);
+  const a=Object.assign(document.createElement("a"),{href:url,download:nomeArq()}); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+  toast(st.modo==="parede" ? "Salvo! Agora coloque como tela de bloqueio 📱" : "Carteirinha salva! 🪪");
+  if(st.modo==="parede") $("comoBloqueio").open=true;
+};
+$("btShare").onclick = async ()=>{
+  if(!ok()) return; const b=await blob(); const f=new File([b],nomeArq(),{type:"image/png"});
+  if(navigator.canShare && navigator.canShare({files:[f]})){ try { await navigator.share({files:[f]}); } catch(e){ if(e.name!=="AbortError") toast("Não deu pra compartilhar. Use Salvar imagem."); } }
+  else $("btBaixar").click();
+};
+$("btApagar").onclick = ()=>{
+  try { localStorage.removeItem(CHAVE); } catch {}
+  CAMPOS.forEach(c=>$(c).value=""); marcarSangue(""); st.foto=st.fotoData=null; $("fotoPrev").style.backgroundImage=""; $("fotoPrev").textContent="👤";
+  render(); toast("Dados apagados deste aparelho");
+};
+
+/* ---------- início ---------- */
+(async ()=>{
+  try { st.logo=await img("logo-transparente.png"); } catch { try { st.logo=await img("logo.png"); } catch {} }
+  await carregar();
+  try { await document.fonts.load("80px Anton"); await document.fonts.load("800 40px Inter"); } catch {}
+  render();
+})();
+})();
+</script>
+</body>
+</html>
